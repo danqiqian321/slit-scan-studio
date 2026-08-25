@@ -208,6 +208,68 @@
     .ctrl-val-input::-webkit-inner-spin-button,
     .ctrl-val-input::-webkit-outer-spin-button { -webkit-appearance: none; }
     .ctrl-val-input:focus { border-color: var(--red); }
+
+    /* ── GALLERY SECTION ── */
+    .gallery-section {
+      background: #F2D5E4;
+      padding: 60px clamp(24px, 5vw, 60px) 80px;
+      position: relative;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .gallery-header { text-align: center; margin-bottom: 40px; }
+    .gallery-title {
+      font-family: "Inktoner", serif;
+      font-size: clamp(72px, 10vw, 132px);
+      font-weight: normal;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    @media (max-width: 900px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .gallery-grid { grid-template-columns: 1fr; } }
+    .gallery-card {
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 3 / 4;
+      background: #000;
+    }
+    .gallery-card img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .gallery-card-info {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(transparent, rgba(0,0,0,0.5));
+    }
+    .gallery-card-name {
+      font-family: "Inktoner", serif;
+      font-size: 16px; font-weight: normal; color: #fff;
+    }
+    .gallery-card-likes {
+      display: flex; align-items: center; gap: 4px;
+      font-family: "Inter", sans-serif;
+      font-size: 13px; color: #fff;
+      cursor: pointer; user-select: none;
+    }
+    .gallery-card-likes svg { width: 16px; height: 16px; }
+    .gallery-loading, .gallery-empty {
+      text-align: center; padding: 60px 20px;
+      font-size: 16px; color: #888;
+      font-family: "Inter", sans-serif;
+      grid-column: 1 / -1;
+    }
 </style>
 </head>
 <body>
@@ -394,23 +456,7 @@
     state.prevScale = state.scale; state.prevRotation = state.rotation;
   }
 
-  // ── FILE INPUT ──
-  const fileInput = document.getElementById('fileInput');
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      state.img.src = ev.target.result;
-      state.img.onload = () => {
-        state.imgLoaded = true;
-        resetPosition();
-        resetScan();
-        showScreen(scanScreen);
-      };
-    };
-    reader.readAsDataURL(file);
-  });
+  // file input removed - using scan/ page instead
 
   // drag & drop onto upload screen
   document.addEventListener('dragover', e => { e.preventDefault(); document.body.classList.add('dragover'); });
