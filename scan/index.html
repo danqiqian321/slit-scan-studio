@@ -647,9 +647,31 @@
         createdAt: fb.serverTimestamp()
       });
 
-      uploadStatus.textContent = 'Uploaded!';
-      btn.textContent = 'Done';
-      setTimeout(() => { uploadModal.classList.remove('open'); btn.disabled = false; btn.textContent = 'Upload'; }, 1500);
+      uploadStatus.innerHTML = '<div class="upload-success">' +
+        '<p style="font-size:15px;margin-bottom:8px;">Uploaded! Your scan will be reviewed.</p>' +
+        '<p style="font-size:13px;color:#888;margin-bottom:12px;">Want to be notified when approved?</p>' +
+        '<div style="display:flex;gap:8px;align-items:center;justify-content:center;">' +
+          '<input type="email" id="notifyEmail" placeholder="your@email.com" style="font-family:Inter,sans-serif;font-size:13px;border:1.5px solid #ccc;border-radius:6px;padding:6px 12px;outline:none;flex:1;max-width:200px;">' +
+          '<button id="notifyBtn" style="font-family:Inter,sans-serif;font-size:13px;background:var(--ink);color:#D5E4E8;border:none;border-radius:6px;padding:7px 14px;cursor:pointer;">Notify me</button>' +
+        '</div>' +
+        '<button id="skipNotify" style="font-family:Inter,sans-serif;font-size:12px;color:#aaa;background:none;border:none;cursor:pointer;margin-top:8px;">No thanks</button>' +
+      '</div>';
+      btn.style.display = 'none';
+
+      document.getElementById('notifyBtn').addEventListener('click', async () => {
+        const email = document.getElementById('notifyEmail').value.trim();
+        if (!email) return;
+        try {
+          await fb.addDoc(fb.collection(fb.db, 'notifications'), { email: email, name: name, createdAt: fb.serverTimestamp() });
+          uploadStatus.innerHTML = '<p style="font-size:14px;">We\'ll let you know!</p>';
+        } catch(e) { uploadStatus.innerHTML = '<p style="font-size:14px;">We\'ll let you know!</p>'; }
+        setTimeout(() => { uploadModal.classList.remove('open'); btn.disabled = false; btn.textContent = 'Upload'; btn.style.display = ''; }, 1500);
+      });
+
+      document.getElementById('skipNotify').addEventListener('click', () => {
+        uploadModal.classList.remove('open');
+        btn.disabled = false; btn.textContent = 'Upload'; btn.style.display = '';
+      });
     } catch (err) {
       console.error(err);
       uploadStatus.textContent = 'Upload failed — try again';
