@@ -538,7 +538,7 @@
   }
 
   function getDC(e) {
-    const r = doodleCanvas.getBoundingClientRect();
+    const r = resultCanvas.getBoundingClientRect();
     const cx = e.touches ? e.touches[0].clientX : e.clientX;
     const cy = e.touches ? e.touches[0].clientY : e.clientY;
     return { x: (cx - r.left) * (doodleCanvas.width / r.width), y: (cy - r.top) * (doodleCanvas.height / r.height) };
