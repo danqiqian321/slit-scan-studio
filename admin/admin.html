@@ -74,7 +74,7 @@
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, where, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, where, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, getDoc, getDocs as getDocsAlias } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getStorage, ref, deleteObject } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     const app = initializeApp({
@@ -188,12 +188,48 @@
       updateCounts(); renderTab();
     };
 
+    // Notifications
+    async function loadNotifications() {
+      try {
+        const snap = await getDocs(query(collection(db, 'notifications'), orderBy('createdAt', 'desc')));
+        document.getElementById('countNotifications').textContent = snap.size;
+        if (!snap.size) {
+          grid.innerHTML = '<div class="empty">No notifications yet</div>';
+          return;
+        }
+        let h = '<div style="max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">';
+        snap.forEach(d => {
+          const data = d.data();
+          const date = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : '';
+          h += '<div style="background:#fff;border:1.5px solid #e0e0e0;border-radius:8px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">' +
+            '<div>' +
+              '<div style="font-size:14px;font-weight:500;margin-bottom:2px;">' + (data.name || '—') + '</div>' +
+              '<div style="font-size:13px;color:#888;">' + (data.email || '—') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+              '<span style="font-size:11px;color:#bbb;">' + date + '</span>' +
+              '<a href="mailto:' + (data.email || '') + '?subject=Your scan is live!&body=Hey ' + (data.name || '') + ',%0A%0AYour slit-scan is now live in the gallery!%0A%0Ahttps://letsscan.club%0A%0A— Slit-Scan Studio" style="font-family:Inter,sans-serif;font-size:12px;background:#0a0a0a;color:#fff;border:none;border-radius:5px;padding:6px 14px;cursor:pointer;text-decoration:none;">Email</a>' +
+            '</div>' +
+          '</div>';
+        });
+        h += '</div>';
+        grid.innerHTML = h;
+      } catch(err) {
+        console.error(err);
+        grid.innerHTML = '<div class="empty">Could not load notifications</div>';
+      }
+    }
+
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         currentTab = tab.dataset.tab;
-        renderTab();
+        if (currentTab === 'notifications') {
+          loadNotifications();
+        } else {
+          renderTab();
+        }
       });
     });
 
@@ -207,6 +243,7 @@
     <button class="tab active" data-tab="pending">Pending <span class="count" id="countPending">0</span></button>
     <button class="tab" data-tab="approved">Approved <span class="count" id="countApproved">0</span></button>
     <button class="tab" data-tab="rejected">Rejected <span class="count" id="countRejected">0</span></button>
+    <button class="tab" data-tab="notifications">Notifications <span class="count" id="countNotifications">0</span></button>
   </div>
   <div class="grid" id="grid">
     <div class="loading">Loading...</div>
