@@ -48,7 +48,7 @@
     .logo-tag  { font-family: "Space Mono", monospace; font-size: 10px; color: var(--red); letter-spacing: 0.08em; text-transform: uppercase; margin-left: 10px; }
 
     /* UPLOAD */
-    #uploadScreen { background: var(--bg); z-index: 3; min-height: 100vh; position: relative !important; }
+    #uploadScreen { background: var(--bg); z-index: 3; min-height: 90vh; position: relative !important; }
     #uploadScreen .top-bar { display: none; }
 
     .upload-body {
@@ -60,7 +60,7 @@
       background-size: 40px 40px;
     }
 
-    .doodle { position: absolute; pointer-events: all; cursor: move; }
+    .doodle { position: absolute; pointer-events: none; cursor: default; outline: none !important; }
     .doodle svg { display: block; pointer-events: none; width: 100%; height: auto; }
 
     .doodle-star-big     { top: 10%; left: 14%; width: 70px; }
@@ -106,20 +106,20 @@
 
     .upload-btn-label {
       display: inline-flex; align-items: center; gap: 8px;
-      border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
+      border: 1.5px solid var(--ink); background: var(--ink); color: var(--bg);
       font-family: "Inter", sans-serif;
       font-size: clamp(14px, 1.5vw, 22px);
       font-weight: 400;
       padding: clamp(8px, 1vw, 12px) clamp(20px, 2vw, 32px); cursor: pointer;
       transition: background 0.15s, color 0.15s;
     }
-    .upload-btn-label:hover { background: var(--ink); color: var(--bg); }
+    .upload-btn-label:hover { background: #333; border-color: #333; color: var(--bg); }
 
     /* SCAN */
     #scanScreen { z-index: 2; background: var(--bg); }
     #scanScreen .top-bar { justify-content: space-between; }
     .scan-main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); overflow: hidden; min-height: 0; }
-    .panel { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .panel { display: none !important; background: var(--bg); flex-direction: column; overflow: hidden; position: relative; }
     .panel-header { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .panel-label { font-family: "Space Mono", monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray); display: flex; align-items: center; gap: 8px; }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: blink 2s infinite; }
@@ -169,7 +169,7 @@
     }
     #designPanel.open { transform: translateX(0); }
 
-    #panelToggle {
+    #panelToggle { display: none !important;
       position: fixed; top: 68px; right: 0; z-index: 201;
       background: var(--ink); color: #f5f3ef;
       font-family: "Space Mono", monospace; font-size: 9px;
@@ -220,6 +220,7 @@
       background-size: 40px 40px;
     }
     .gallery-header { text-align: center; margin-bottom: 40px; }
+    .gallery-subtitle { font-family: "Inter", sans-serif; font-size: clamp(14px, 1.5vw, 18px); color: var(--ink); margin-top: 12px; font-weight: 400; }
     .gallery-title {
       font-family: "Inktoner", serif;
       font-size: clamp(72px, 10vw, 132px);
@@ -323,7 +324,7 @@
         <span class="line2">Scan!</span>
       </h1>
       <p class="upload-sub">A digital slit scan machine to turn your memories to art.<br>Upload an image and start scanning like irl!</p>
-      <a class="upload-btn-label" href="scan/" style="text-decoration:none;">Start a scan</a>
+      <a class="upload-btn-label" href="scan/" style="text-decoration:none;">Start new scan</a>
     </div>
   </div>
 </div>
@@ -1158,6 +1159,7 @@
 <div class="gallery-section" id="gallerySection">
   <div class="gallery-header">
     <h2 class="gallery-title">Gallery</h2>
+    <p class="gallery-subtitle">Lets see cooool scans from cooool people!!</p>
   </div>
   <div class="gallery-grid" id="galleryGrid">
     <div class="gallery-loading">Loading...</div>
