@@ -1196,7 +1196,7 @@
         const d = doc.data();
         const name = d.name || 'Anonymous';
         html += '<div class="gallery-card">' +
-          '<img src="' + d.imageUrl + '" alt="' + name + '" loading="lazy" onerror="this.parentElement.style.display=&apos;none&apos;">' +
+          '<img src="' + d.imageUrl + '" alt="' + name + '" loading="lazy" onerror="this.closest(\'.gallery-card\').style.display=\'none\'">' +
           '<div class="gallery-card-info">' +
             '<span class="gallery-card-name">' + name + '</span>' +
             '<span class="gallery-card-likes" data-id="' + doc.id + '">' +

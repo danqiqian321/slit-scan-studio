@@ -1167,7 +1167,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getFirestore, collection, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const app = initializeApp({
     apiKey: "AIzaSyBW8WUr_TskJB6907hFYcuoDcthO2K-D7U",
@@ -1183,7 +1183,7 @@
   async function loadGallery() {
     const container = document.getElementById('galleryGrid');
     try {
-      const q = query(collection(db, 'gallery'), orderBy('createdAt', 'desc'));
+      const q = query(collection(db, 'gallery'), where('status', '==', 'approved'), orderBy('createdAt', 'desc'));
       const snap = await getDocs(q);
 
       if (snap.empty) {
@@ -1196,7 +1196,7 @@
         const d = doc.data();
         const name = d.name || 'Anonymous';
         html += '<div class="gallery-card">' +
-          '<img src="' + d.imageUrl + '" alt="' + name + '" loading="lazy">' +
+          '<img src="' + d.imageUrl + '" alt="' + name + '" loading="lazy" onerror="this.parentElement.style.display=&apos;none&apos;">' +
           '<div class="gallery-card-info">' +
             '<span class="gallery-card-name">' + name + '</span>' +
             '<span class="gallery-card-likes" data-id="' + doc.id + '">' +
