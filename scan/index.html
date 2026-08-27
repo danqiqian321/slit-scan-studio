@@ -339,10 +339,10 @@
 
   <!-- HEADER -->
   <div class="header">
-    <h1 class="header-title">Let&rsquo;s Scan!</h1>
+    <h1 class="header-title"><a href="../" style="text-decoration:none;color:inherit;">Let&rsquo;s Scan!</a></h1>
     <div class="header-buttons">
       <label class="hbtn">
-        Upload Image
+        Change Image
         <input type="file" id="fileInput" accept="image/*" style="display:none">
       </label>
       <button class="hbtn" id="clearBtn">Clear Canvas</button>
@@ -378,7 +378,7 @@
 <!-- RESULT OVERLAY -->
 <div id="resultOverlay">
   <div class="result-header">
-    <h1 class="result-title">Let’s Scan!</h1>
+    <h1 class="result-title"><a href="../" style="text-decoration:none;color:inherit;cursor:pointer;">Let's Scan!</a></h1>
     <div class="result-buttons">
       <button class="rbtn" id="scanAgainBtn">Scan Again</button>
       <button class="rbtn" id="doodleToggle">Doodle</button>
@@ -446,8 +446,14 @@
   };
 
   // load default image
-  // no default image - user uploads one
-  state.img.onload = () => { state.imgLoaded = true; };
+  // Load default image
+  state.img.src = '../image/scan.png';
+  state.img.onload = () => {
+    state.imgLoaded = true;
+    const scaleW = (W * 0.7) / state.img.width;
+    const scaleH = (H * 0.7) / state.img.height;
+    state.scale = Math.min(scaleW, scaleH, 1);
+  };
 
   // ── file upload ──
   document.getElementById('fileInput').addEventListener('change', e => {
