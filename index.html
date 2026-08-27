@@ -264,14 +264,61 @@
       font-size: 13px; color: #fff;
       cursor: pointer; user-select: none;
     }
-    .gallery-card-likes svg { width: 16px; height: 16px; }
+    .gallery-card-likes svg { width: 16px; height: 16px; transition: transform 0.2s; }
+    .gallery-card-likes.liked svg { fill: #ff3b3b; stroke: #ff3b3b; transform: scale(1.2); }
     .gallery-loading, .gallery-empty {
       text-align: center; padding: 60px 20px;
       font-size: 16px; color: #888;
       font-family: "Inter", sans-serif;
       grid-column: 1 / -1;
     }
-</style>
+
+    /* ── LIGHTBOX ── */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 500;
+      background: #6C6C6C;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px);
+      background-size: 40px 40px;
+      display: none; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-back {
+      position: absolute; top: 24px; left: 24px;
+      background: none; border: none; cursor: pointer;
+      color: #fff; font-size: 28px; z-index: 2;
+      width: 44px; height: 44px; display: flex;
+      align-items: center; justify-content: center;
+      border-radius: 50%; transition: background 0.15s;
+    }
+    .lightbox-back:hover { background: rgba(255,255,255,0.1); }
+    .lightbox-img-wrap {
+      cursor: default;
+      max-width: 80vw; max-height: 85vh;
+      display: flex; flex-direction: column;
+      align-items: center;
+    }
+    .lightbox-img {
+      max-width: 100%; max-height: 80vh;
+      object-fit: contain; border-radius: 6px;
+      display: block;
+    }
+    .lightbox-info {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; padding: 12px 4px 0;
+      color: #fff; font-family: "Inktoner", serif;
+      font-size: 18px;
+    }
+    .lightbox-likes {
+      display: flex; align-items: center; gap: 6px;
+      font-family: "Inter", sans-serif; font-size: 14px;
+      color: #fff; cursor: pointer; user-select: none;
+    }
+    .lightbox-likes svg { width: 18px; height: 18px; }
+    .lightbox-likes.liked svg { fill: #ff3b3b; stroke: #ff3b3b; }
+  </style>
 </head>
 <body>
 
@@ -1169,7 +1216,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, collection, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getFirestore, collection, query, orderBy, where, getDocs, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
   const app = initializeApp({
     apiKey: "AIzaSyBW8WUr_TskJB6907hFYcuoDcthO2K-D7U",
@@ -1181,6 +1228,13 @@
   });
 
   const db = getFirestore(app);
+
+  function getLiked() {
+    try { return JSON.parse(localStorage.getItem('liked') || '{}'); } catch(e) { return {}; }
+  }
+  function saveLiked(obj) {
+    try { localStorage.setItem('liked', JSON.stringify(obj)); } catch(e) {}
+  }
 
   async function loadGallery() {
     const container = document.getElementById('galleryGrid');
@@ -1197,12 +1251,13 @@
       snap.forEach(doc => {
         const d = doc.data();
         const name = d.name || 'Anonymous';
+        var isLiked = getLiked()[doc.id];
         html += '<div class="gallery-card">' +
           '<img src="' + d.imageUrl + '" alt="' + name + '" loading="lazy" onerror="this.parentElement.style.display=&apos;none&apos;">' +
           '<div class="gallery-card-info">' +
             '<span class="gallery-card-name">' + name + '</span>' +
-            '<span class="gallery-card-likes" data-id="' + doc.id + '">' +
-              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+            '<span class="gallery-card-likes' + (isLiked ? ' liked' : '') + '" data-id="' + doc.id + '">' +
+              '<svg viewBox="0 0 24 24" fill="' + (isLiked ? '#ff3b3b' : 'none') + '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
               '<span>' + (d.likes || 0) + '</span>' +
             '</span>' +
           '</div>' +
@@ -1216,6 +1271,47 @@
   }
 
   loadGallery();
+
+  document.addEventListener('click', async (e) => {
+    const likeEl = e.target.closest('.gallery-card-likes');
+    if (!likeEl) return;
+    
+    const id = likeEl.dataset.id;
+    const liked = getLiked();
+    const countSpan = likeEl.querySelector('span:last-child');
+    let count = parseInt(countSpan.textContent) || 0;
+
+    if (liked[id]) {
+      // Unlike
+      delete liked[id];
+      count = Math.max(0, count - 1);
+      likeEl.classList.remove('liked');
+      await updateDoc(doc(db, 'gallery', id), { likes: increment(-1) }).catch(() => {});
+    } else {
+      // Like
+      liked[id] = true;
+      count++;
+      likeEl.classList.add('liked');
+      await updateDoc(doc(db, 'gallery', id), { likes: increment(1) }).catch(() => {});
+    }
+
+    countSpan.textContent = count;
+    saveLiked(liked);
+  });
 </script>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-back" id="lightboxBack">&#8592;</button>
+  <div class="lightbox-img-wrap" id="lightboxWrap">
+    <img class="lightbox-img" id="lightboxImg">
+    <div class="lightbox-info">
+      <span id="lightboxName"></span>
+      <span class="lightbox-likes" id="lightboxLikes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span id="lightboxCount">0</span>
+      </span>
+    </div>
+  </div>
+</div>
 </body>
 </html>
