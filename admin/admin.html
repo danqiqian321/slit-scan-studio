@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slit-Scan — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #f5f5f0; --ink: #0a0a0a; --red: #e8380d; --green: #2d8a4e; }
+    body {
+      min-height: 100vh; background: var(--bg);
+      font-family: "Inter", sans-serif; color: var(--ink);
+      padding: 40px clamp(20px, 5vw, 60px);
+    }
+    h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: #888; margin-bottom: 32px; }
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 24px;
+      border-bottom: 1.5px solid #ddd; padding-bottom: 0;
+    }
+    .tab {
+      font-family: "Inter", sans-serif; font-size: 14px; font-weight: 500;
+      padding: 8px 20px; border: none; background: none;
+      cursor: pointer; color: #888; border-bottom: 2px solid transparent;
+      margin-bottom: -1.5px; transition: all 0.15s;
+    }
+    .tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+    .tab:hover { color: var(--ink); }
+    .count {
+      display: inline-block; background: #eee; border-radius: 10px;
+      padding: 1px 8px; font-size: 11px; margin-left: 6px; color: #666;
+    }
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      border: 1.5px solid #e0e0e0; border-radius: 8px;
+      overflow: hidden; background: #fff;
+    }
+    .card img {
+      width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block;
+    }
+    .card-body { padding: 12px 14px; }
+    .card-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .card-date { font-size: 11px; color: #999; margin-bottom: 10px; }
+    .card-actions { display: flex; gap: 8px; }
+    .btn {
+      font-family: "Inter", sans-serif; font-size: 12px; font-weight: 500;
+      padding: 6px 14px; border-radius: 5px; cursor: pointer;
+      border: 1.5px solid; transition: all 0.15s; flex: 1; text-align: center;
+    }
+    .btn-approve {
+      background: var(--green); color: #fff; border-color: var(--green);
+    }
+    .btn-approve:hover { background: #236b3e; }
+    .btn-reject {
+      background: #fff; color: var(--red); border-color: var(--red);
+    }
+    .btn-reject:hover { background: var(--red); color: #fff; }
+    .btn-undo {
+      background: #fff; color: #888; border-color: #ccc;
+    }
+    .btn-undo:hover { background: #f0f0f0; }
+    .status-badge {
+      display: inline-block; font-size: 11px; font-weight: 500;
+      padding: 2px 10px; border-radius: 10px; margin-bottom: 8px;
+    }
+    .status-approved { background: #e6f4ea; color: var(--green); }
+    .status-rejected { background: #fde7e7; color: var(--red); }
+    .empty { text-align: center; padding: 60px; color: #999; font-size: 14px; grid-column: 1/-1; }
+    .loading { text-align: center; padding: 40px; color: #999; grid-column: 1/-1; }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, query, orderBy, where, getDocs, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getStorage, ref, deleteObject } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyBW8WUr_TskJB6907hFYcuoDcthO2K-D7U",
+      authDomain: "scan-79aa4.firebaseapp.com",
+      projectId: "scan-79aa4",
+      storageBucket: "scan-79aa4.firebasestorage.app",
+      messagingSenderId: "838122188624",
+      appId: "1:838122188624:web:5f753eb57c361f1b960655"
+    });
+
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const grid = document.getElementById('grid');
+    let currentTab = 'pending';
+    let allDocs = [];
+
+    async function loadAll() {
+      grid.innerHTML = '<div class="loading">Loading...</div>';
+      const q = query(collection(db, 'gallery'), orderBy('createdAt', 'desc'));
+      const snap = await getDocs(q);
+      allDocs = [];
+      snap.forEach(d => allDocs.push({ id: d.id, ...d.data() }));
+      updateCounts();
+      renderTab();
+    }
+
+    function updateCounts() {
+      document.getElementById('countPending').textContent = allDocs.filter(d => (d.status || 'pending') === 'pending').length;
+      document.getElementById('countApproved').textContent = allDocs.filter(d => d.status === 'approved').length;
+      document.getElementById('countRejected').textContent = allDocs.filter(d => d.status === 'rejected').length;
+    }
+
+    function renderTab() {
+      const filtered = allDocs.filter(d => {
+        const s = d.status || 'pending';
+        return s === currentTab;
+      });
+
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="empty">Nothing here</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(d => {
+        const date = d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleDateString() : '';
+        let actions = '';
+        if (currentTab === 'pending') {
+          actions = `<button class="btn btn-approve" onclick="window._approve('${d.id}')">Approve</button>` +
+                    `<button class="btn btn-reject" onclick="window._reject('${d.id}')">Reject</button>`;
+        } else if (currentTab === 'approved') {
+          actions = `<span class="status-badge status-approved">Approved</span>` +
+                    `<button class="btn btn-undo" onclick="window._setStatus('${d.id}','pending')">Undo</button>`;
+        } else {
+          actions = `<span class="status-badge status-rejected">Rejected</span>` +
+                    `<button class="btn btn-undo" onclick="window._setStatus('${d.id}','pending')">Undo</button>` +
+                    `<button class="btn btn-reject" onclick="window._remove('${d.id}','${d.imageUrl}')">Delete</button>`;
+        }
+        return `<div class="card" id="card-${d.id}">
+          <img src="${d.imageUrl}" loading="lazy">
+          <div class="card-body">
+            <div class="card-name">${d.name || 'Anonymous'}</div>
+            <div class="card-date">${date}</div>
+            <div class="card-actions">${actions}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    window._approve = async (id) => {
+      await updateDoc(doc(db, 'gallery', id), { status: 'approved', reviewedAt: serverTimestamp() });
+      const d = allDocs.find(x => x.id === id);
+      if (d) d.status = 'approved';
+      updateCounts(); renderTab();
+    };
+
+    window._reject = async (id) => {
+      await updateDoc(doc(db, 'gallery', id), { status: 'rejected', reviewedAt: serverTimestamp() });
+      const d = allDocs.find(x => x.id === id);
+      if (d) d.status = 'rejected';
+      updateCounts(); renderTab();
+    };
+
+    window._setStatus = async (id, status) => {
+      await updateDoc(doc(db, 'gallery', id), { status });
+      const d = allDocs.find(x => x.id === id);
+      if (d) d.status = status;
+      updateCounts(); renderTab();
+    };
+
+    window._remove = async (id, url) => {
+      if (!confirm('Permanently delete this scan?')) return;
+      try {
+        const path = decodeURIComponent(url.split('/o/')[1].split('?')[0]);
+        await deleteObject(ref(storage, path));
+      } catch(e) { console.warn('Storage delete failed', e); }
+      await deleteDoc(doc(db, 'gallery', id));
+      allDocs = allDocs.filter(x => x.id !== id);
+      updateCounts(); renderTab();
+    };
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentTab = tab.dataset.tab;
+        renderTab();
+      });
+    });
+
+    loadAll();
+  </script>
+</head>
+<body>
+  <h1>Admin</h1>
+  <p class="subtitle">Review gallery submissions</p>
+  <div class="tabs">
+    <button class="tab active" data-tab="pending">Pending <span class="count" id="countPending">0</span></button>
+    <button class="tab" data-tab="approved">Approved <span class="count" id="countApproved">0</span></button>
+    <button class="tab" data-tab="rejected">Rejected <span class="count" id="countRejected">0</span></button>
+  </div>
+  <div class="grid" id="grid">
+    <div class="loading">Loading...</div>
+  </div>
+</body>
+</html>
