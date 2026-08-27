@@ -97,7 +97,7 @@
 
     .upload-sub {
       font-family: "Inter", sans-serif;
-      font-size: clamp(16px, 1.8vw, 24px);
+      font-size: clamp(12px, 1.4vw, 18px);
       font-weight: 400;
       color: var(--ink);
       line-height: 1.5;
@@ -219,8 +219,8 @@
         linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
       background-size: 40px 40px;
     }
-    .gallery-header { text-align: center; margin-bottom: 40px; }
-    .gallery-subtitle { font-family: "Inter", sans-serif; font-size: clamp(14px, 1.5vw, 18px); color: var(--ink); margin-top: 12px; font-weight: 400; }
+    .gallery-header { text-align: center; margin-bottom: 40px; padding-top: 20px; }
+    .gallery-subtitle { font-family: "Inter", sans-serif; font-size: clamp(12px, 1.4vw, 18px); color: var(--ink); margin-top: 12px; font-weight: 400; }
     .gallery-title {
       font-family: "Inktoner", serif;
       font-size: clamp(72px, 10vw, 132px);
@@ -311,7 +311,7 @@
       display: flex; align-items: center; justify-content: space-between;
       width: 100%; padding: 12px 4px 0;
       color: #fff; font-family: "Inktoner", serif;
-      font-size: 18px;
+      font-size: 22px;
     }
     .lightbox-likes {
       display: flex; align-items: center; gap: 6px;
@@ -935,7 +935,7 @@
 
   // ── Body copy ──
   const sub = document.querySelector('.upload-sub');
-  bind('subSize',   v => sub && (sub.style.fontSize = v + 'px'));
+  // bind('subSize',   v => sub && (sub.style.fontSize = v + 'px')); // disabled - uses CSS
   bind('subWeight', v => sub && (sub.style.fontWeight = v));
   bind('subLH',     v => sub && (sub.style.lineHeight = v));
   bind('subLS',     v => sub && (sub.style.letterSpacing = v + 'em'));
@@ -1299,6 +1299,85 @@
 
     countSpan.textContent = count;
     saveLiked(liked);
+  });
+
+  // ── Lightbox detail view ──
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxName = document.getElementById('lightboxName');
+  const lightboxCount = document.getElementById('lightboxCount');
+  const lightboxLikes = document.getElementById('lightboxLikes');
+  let lightboxId = null;
+
+  document.addEventListener('click', (e) => {
+    const card = e.target.closest('.gallery-card');
+    if (!card || e.target.closest('.gallery-card-likes')) return;
+
+    const img = card.querySelector('img');
+    const nameEl = card.querySelector('.gallery-card-name');
+    const likes = card.querySelector('.gallery-card-likes');
+    if (!img) return;
+
+    lightboxId = likes ? likes.dataset.id : null;
+    lightboxImg.src = img.src;
+    lightboxName.textContent = nameEl ? nameEl.textContent : '';
+
+    const count = likes ? likes.querySelector('span:last-child').textContent : '0';
+    lightboxCount.textContent = count;
+
+    const isLiked = lightboxId && getLiked()[lightboxId];
+    lightboxLikes.classList.toggle('liked', !!isLiked);
+    lightboxLikes.querySelector('svg').setAttribute('fill', isLiked ? '#ff3b3b' : 'none');
+
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  document.getElementById('lightboxBack').addEventListener('click', () => {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  });
+
+  lightboxLikes.addEventListener('click', async () => {
+    if (!lightboxId) return;
+    const liked = getLiked();
+    let count = parseInt(lightboxCount.textContent) || 0;
+
+    if (liked[lightboxId]) {
+      delete liked[lightboxId];
+      count = Math.max(0, count - 1);
+      lightboxLikes.classList.remove('liked');
+      lightboxLikes.querySelector('svg').setAttribute('fill', 'none');
+      await updateDoc(doc(db, 'gallery', lightboxId), { likes: increment(-1) }).catch(() => {});
+    } else {
+      liked[lightboxId] = true;
+      count++;
+      lightboxLikes.classList.add('liked');
+      lightboxLikes.querySelector('svg').setAttribute('fill', '#ff3b3b');
+      await updateDoc(doc(db, 'gallery', lightboxId), { likes: increment(1) }).catch(() => {});
+    }
+    lightboxCount.textContent = count;
+    saveLiked(liked);
+
+    const cardLikes = document.querySelector('.gallery-card-likes[data-id="' + lightboxId + '"]');
+    if (cardLikes) {
+      cardLikes.classList.toggle('liked', !!liked[lightboxId]);
+      cardLikes.querySelector('span:last-child').textContent = count;
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    }
   });
 </script>
 
