@@ -240,7 +240,22 @@
     .rbtn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
     .rbtn.primary:hover { background: #333; border-color: #333; }
     .rbtn.active { background: var(--ink); color: #D5E4E8; }
-    .color-bar { display: none; align-items: center; justify-content: center; gap: 16px; padding: 10px 0 4px; flex-shrink: 0; position: relative; z-index: 10; }
+    .color-bar { display: none; align-items: center; justify-content: center; gap: 12px; padding: 10px 0 4px; flex-shrink: 0; position: relative; z-index: 10; }
+    .brush-group {
+      display: flex; align-items: center; gap: 8px;
+      border: 1.5px solid var(--ink); border-radius: 6px;
+      padding: 4px 14px; height: 38px;
+    }
+    .brush-label { font-family: "Inter", sans-serif; font-size: 14px; color: var(--ink); }
+    .brush-slider { width: 80px; accent-color: var(--ink); }
+    .eraser-btn {
+      font-family: "Inter", sans-serif; font-size: 14px; font-weight: 400;
+      padding: 4px 14px; border-radius: 6px; cursor: pointer;
+      border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
+      height: 38px; transition: all 0.15s;
+    }
+    .eraser-btn.active { background: var(--ink); color: #D5E4E8; }
+    .eraser-btn:hover { background: var(--ink); color: #D5E4E8; }
     .color-bar.open { display: flex; }
     .picker-group {
       display: flex; align-items: center; gap: 8px;
@@ -395,6 +410,11 @@
       <span class="picker-label">BG</span>
       <input type="color" id="bgColorPicker" value="#D5E4E8" class="color-input">
     </label>
+    <div class="brush-group">
+      <span class="brush-label">Size</span>
+      <input type="range" class="brush-slider" id="brushSize" min="1" max="40" value="4">
+    </div>
+    <button class="eraser-btn" id="eraserBtn">Eraser</button>
   </div>
   <div class="result-body">
     <div class="result-canvas-wrap" id="resultWrap">
@@ -503,7 +523,7 @@
   // ── doodle canvas ──
   const doodleCanvas = document.getElementById('doodleCanvas');
   const doodleCtx = doodleCanvas.getContext('2d');
-  let doodleColor = '#ffffff', isDrawing = false, isEraser = false, doodleMode = false;
+  let doodleColor = '#ffffff', isDrawing = false, isEraser = false, doodleMode = false, brushSize = 4;
   let resultBgColor = '#ffffff';
 
   const doodleToggle = document.getElementById('doodleToggle');
@@ -516,9 +536,25 @@
     doodleCanvas.classList.toggle('active', doodleMode);
   });
 
+  document.getElementById('brushSize').addEventListener('input', e => {
+    brushSize = parseInt(e.target.value);
+  });
+
+  document.getElementById('eraserBtn').addEventListener('click', () => {
+    isEraser = !isEraser;
+    document.getElementById('eraserBtn').classList.toggle('active', isEraser);
+    if (isEraser) {
+      document.getElementById('penColorPicker').parentElement.style.opacity = '0.4';
+    } else {
+      document.getElementById('penColorPicker').parentElement.style.opacity = '1';
+    }
+  });
+
   document.getElementById('penColorPicker').addEventListener('input', e => {
     doodleColor = e.target.value;
     isEraser = false;
+    document.getElementById('eraserBtn').classList.remove('active');
+    document.getElementById('penColorPicker').parentElement.style.opacity = '1';
   });
 
   document.getElementById('bgColorPicker').addEventListener('input', e => {
@@ -550,10 +586,10 @@
     doodleCtx.lineTo(c.x, c.y);
     if (isEraser) {
       doodleCtx.save(); doodleCtx.globalCompositeOperation = 'destination-out';
-      doodleCtx.lineWidth = 16; doodleCtx.lineCap = 'round'; doodleCtx.lineJoin = 'round';
+      doodleCtx.lineWidth = brushSize * 4; doodleCtx.lineCap = 'round'; doodleCtx.lineJoin = 'round';
       doodleCtx.stroke(); doodleCtx.restore();
     } else {
-      doodleCtx.strokeStyle = doodleColor; doodleCtx.lineWidth = 4;
+      doodleCtx.strokeStyle = doodleColor; doodleCtx.lineWidth = brushSize;
       doodleCtx.lineCap = 'round'; doodleCtx.lineJoin = 'round'; doodleCtx.stroke();
     }
   }
@@ -576,6 +612,9 @@
     doodleToggle.classList.remove('active');
     colorBar.classList.remove('open');
     doodleCanvas.classList.remove('active');
+    isEraser = false;
+    document.getElementById('eraserBtn').classList.remove('active');
+    document.getElementById('penColorPicker').parentElement.style.opacity = '1';
     document.getElementById('bgColorPicker').value = '#ffffff';
     document.getElementById('penColorPicker').value = '#ffffff';
 
@@ -611,6 +650,9 @@
     doodleToggle.classList.remove('active');
     colorBar.classList.remove('open');
     doodleCanvas.classList.remove('active');
+    isEraser = false;
+    document.getElementById('eraserBtn').classList.remove('active');
+    document.getElementById('penColorPicker').parentElement.style.opacity = '1';
   });
 
   document.getElementById('downloadBtn').addEventListener('click', (e) => {
