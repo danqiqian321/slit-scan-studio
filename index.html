@@ -111,7 +111,7 @@
     #scanScreen { z-index: 2; background: var(--bg); }
     #scanScreen .top-bar { justify-content: space-between; }
     .scan-main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); overflow: hidden; min-height: 0; }
-    .panel { background: var(--bg); flex-direction: column; overflow: hidden; position: relative; }
+    .panel { display: none !important; background: var(--bg); flex-direction: column; overflow: hidden; position: relative; }
     .panel-header { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .panel-label { font-family: "Space Mono", monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gray); display: flex; align-items: center; gap: 8px; }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: blink 2s infinite; }
@@ -161,7 +161,7 @@
     }
     #designPanel.open { transform: translateX(0); }
 
-    #panelToggle {
+    #panelToggle { display: none !important;
       position: fixed; top: 68px; right: 0; z-index: 201;
       background: var(--ink); color: #f5f3ef;
       font-family: "Space Mono", monospace; font-size: 9px;
