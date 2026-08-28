@@ -332,20 +332,12 @@
     @media (max-width: 768px) {
       html, body { overflow-y: auto; height: auto; }
       .app { height: auto; min-height: 100vh; }
-      .result-buttons { flex-wrap: nowrap; gap: 6px; }
-      .result-buttons .rbtn { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
       .color-bar {
-        flex-wrap: nowrap;
-        gap: 8px;
-        overflow-x: auto;
-        justify-content: flex-start;
-        padding: 10px 16px 4px;
-        -webkit-overflow-scrolling: touch;
+        flex-wrap: wrap;
+        gap: 8px 10px;
+        max-width: 280px;
+        margin: 0 auto;
       }
-      .color-bar .picker-group,
-      .color-bar .brush-group,
-      .color-bar .eraser-btn { flex-shrink: 0; }
-      .brush-slider { width: 60px; }
       .scan-body {
         flex-direction: column;
         gap: 16px;
@@ -566,14 +558,11 @@
   const doodleToggle = document.getElementById('doodleToggle');
   const colorBar = document.getElementById('colorBar');
 
-  const uploadGalleryBtn = document.getElementById('uploadGalleryBtn');
   doodleToggle.addEventListener('click', () => {
     doodleMode = !doodleMode;
     doodleToggle.classList.toggle('active', doodleMode);
     colorBar.classList.toggle('open', doodleMode);
     doodleCanvas.classList.toggle('active', doodleMode);
-    // Demote Upload to Gallery from primary while doodling
-    uploadGalleryBtn.classList.toggle('primary', !doodleMode);
   });
 
   document.getElementById('brushSize').addEventListener('input', e => {
@@ -651,7 +640,6 @@
     doodleMode = false;
     doodleToggle.classList.remove('active');
     colorBar.classList.remove('open');
-    document.getElementById('uploadGalleryBtn').classList.add('primary');
     doodleCanvas.classList.remove('active');
     isEraser = false;
     document.getElementById('eraserBtn').classList.remove('active');
@@ -690,7 +678,6 @@
     isDrawing = false;
     doodleToggle.classList.remove('active');
     colorBar.classList.remove('open');
-    document.getElementById('uploadGalleryBtn').classList.add('primary');
     doodleCanvas.classList.remove('active');
     isEraser = false;
     document.getElementById('eraserBtn').classList.remove('active');
