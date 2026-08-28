@@ -106,6 +106,7 @@
       border-radius: 8px;
       position: relative;
       overflow: hidden;
+      touch-action: none;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -823,6 +824,7 @@
 
   bedContainer.addEventListener('touchstart', e => {
     hideHint();
+    e.preventDefault();
     if (e.touches.length === 1) {
       const c = getCoords(e);
       state.isDragging = true;
@@ -835,9 +837,11 @@
       tStartDist = Math.sqrt(dx*dx + dy*dy);
       tStartScale = state.scale;
     }
-  }, { passive: true });
+  }, { passive: false });
 
-  window.addEventListener('touchmove', e => {
+  bedContainer.addEventListener('touchmove', e => {
+    if (!state.isDragging && e.touches.length !== 2) return;
+    e.preventDefault();
     if (e.touches.length === 1 && state.isDragging) {
       const c = getCoords(e);
       state.x = c.x - state.dragStartX;
@@ -848,7 +852,7 @@
       const dist = Math.sqrt(dx*dx + dy*dy);
       state.scale = Math.max(0.1, Math.min(4, tStartScale * (dist / tStartDist)));
     }
-  }, { passive: true });
+  }, { passive: false });
 
   window.addEventListener('touchend', () => { state.isDragging = false; });
 
