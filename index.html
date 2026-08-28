@@ -77,21 +77,13 @@
     .upload-copy { position: relative; z-index: 1; max-width: 480px; }
 
     .upload-headline {
-      font-family: "Inktoner", serif;
-      font-size: clamp(48px, 10vw, 132px);
-      line-height: 0.92;
-      color: var(--ink);
-      font-weight: normal;
+      margin: 0;
+      line-height: 0;
     }
-
-    /* Misaligned lines — "Scan!" shifts right */
-    .upload-headline .line1 {
+    .headline-logo {
       display: block;
-      transform: translateX(-6px) rotate(-1.2deg);
-    }
-    .upload-headline .line2 {
-      display: block;
-      transform: translateX(18px) rotate(0.6deg);
+      width: clamp(280px, 34vw, 480px);
+      height: auto;
     }
 
 
@@ -341,11 +333,11 @@
         align-items: center;
       }
       .upload-headline {
-        font-size: clamp(56px, 18vw, 90px);
         text-align: center;
       }
-      .upload-headline .line1 { transform: translateX(-4px) rotate(-1.2deg); }
-      .upload-headline .line2 { transform: translateX(12px) rotate(0.6deg); }
+      .headline-logo {
+        width: min(78vw, 420px);
+      }
 
       .upload-sub {
         text-align: center;
@@ -441,8 +433,7 @@
     </div>
     <div class="upload-copy" id="uploadCopy">
       <h1 class="upload-headline">
-        <span class="line1">Let&rsquo;s</span>
-        <span class="line2">Scan!</span>
+        <img src="image/logo.svg" alt="Let's Scan!" class="headline-logo">
       </h1>
       <p class="upload-sub">A digital slit scan machine to turn your memories to art.<br>Upload an image and start scanning like irl!</p>
       <a class="upload-btn-label" href="scan/" style="text-decoration:none;">Start new scan</a>
